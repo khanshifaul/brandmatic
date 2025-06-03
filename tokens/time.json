@@ -1,0 +1,27 @@
+{
+  "time": {
+    "transition": {
+      "xs": { "value": "100", "type": "time" },
+      "sm": { "value": "200", "type": "time" },
+      "md": { "value": "400", "type": "time" },
+      "lg": { "value": "600", "type": "time" },
+      "xl": { "value": "1000", "type": "time" }
+    },
+
+    "delay": {
+      "xs": { "value": "50", "type": "time" },
+      "sm": { "value": "100", "type": "time" },
+      "md": { "value": "200", "type": "time" },
+      "lg": { "value": "300", "type": "time" },
+      "xl": { "value": "400", "type": "time" }
+    },
+
+    "duration": {
+      "xs": { "value": "1000", "type": "time" },
+      "sm": { "value": "2000", "type": "time" },
+      "md": { "value": "4000", "type": "time" },
+      "lg": { "value": "6000", "type": "time" },
+      "xl": { "value": "8000", "type": "time" }
+    }
+  }
+}

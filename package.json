@@ -1,0 +1,36 @@
+{
+  "name": "color-analyzer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run generate-tokens && next dev --turbopack",
+    "dev:watch": "nodemon --watch tokens/colors.json --exec \"npm run generate-tokens && next dev --turbopack\"",
+    "build": "npm run generate-tokens && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "build:tokens": "style-dictionary build --config config.style-dictionary.js",
+    "clean:tokens": "style-dictionary clean",
+    "generate-tokens": "ts-node --project scripts/tsconfig.json scripts/generate-css-vars.ts"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "next": "15.3.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-dropzone": "^14.3.8"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.2",
+    "nodemon": "^3.1.0",
+    "style-dictionary": "^5.0.0",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "ts-node": "^10.9.2"
+  }
+}
