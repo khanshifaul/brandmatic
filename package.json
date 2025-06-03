@@ -18,6 +18,7 @@
     "@reduxjs/toolkit": "^2.8.2",
     "next": "15.3.2",
     "next-redux-wrapper": "^8.1.0",
+    "postcss": "^8.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.8",
@@ -26,7 +27,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.1.8",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -34,7 +35,7 @@
     "eslint-config-next": "15.3.2",
     "nodemon": "^3.1.0",
     "style-dictionary": "^5.0.0",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.1.8",
     "typescript": "^5"
   },
   "engines": {

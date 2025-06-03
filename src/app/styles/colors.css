@@ -1,21 +1,41 @@
+/* Dynamic color variables - Generated 2025-06-03T18:59:36.246Z */
 :root {
-/* Light theme color tokens */
-  --color-primary-light: #5B83A6;
-  --color-secondary-light: #97A7B6;
-  --color-accent-light: #D6E2E6;
-  --color-tertiary-light: #223946;
-  --color-quaternary-light: #785744;
-  --color-focus-light: #5B83A6;
+  /* Light theme color tokens */
+  --color-primary-light: #F5E9D8;
+  --color-secondary-light: #8A5436;
+  --color-accent-light: #67A5CD;
+  --color-tertiary-light: #3071C5;
+  --color-quaternary-light: #D2211C;
+  --color-focus-light: #F5E9D8;
+
+  /* Main theme variables */
+  --color-primary: var(--color-primary-light);
+  --color-secondary: var(--color-secondary-light);
+  --color-accent: var(--color-accent-light);
+  --color-tertiary: var(--color-tertiary-light);
+  --color-quaternary: var(--color-quaternary-light);
+
+  /* Theme transition */
+  --theme-transition: background-color 0.2s ease-in-out,
+                     color 0.2s ease-in-out,
+                     border-color 0.2s ease-in-out,
+                     opacity 0.2s ease-in-out;
 }
 
-/* Inject dark theme tokens */
-@media (prefers-color-scheme: dark) {
-  :root {
-  --color-primary-dark: #76aad7;
-  --color-secondary-dark: #69747f;
-  --color-accent-dark: #959ea1;
-  --color-tertiary-dark: #2c4a5b;
-  --color-quaternary-dark: #9c7158;
-  --color-focus-dark: #76aad7;
-  }
+/* Dark theme tokens */
+.dark {
+  /* Dark theme color tokens */
+  --color-primary-dark: #aba397;
+  --color-secondary-dark: #b36d46;
+  --color-accent-dark: #48738f;
+  --color-tertiary-dark: #3e92ff;
+  --color-quaternary-dark: #ff2a24;
+  --color-focus-dark: #aba397;
+
+  /* Update main theme variables */
+  --color-primary: var(--color-primary-dark);
+  --color-secondary: var(--color-secondary-dark);
+  --color-accent: var(--color-accent-dark);
+  --color-tertiary: var(--color-tertiary-dark);
+  --color-quaternary: var(--color-quaternary-dark);
 }

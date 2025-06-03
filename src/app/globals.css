@@ -1,122 +1,155 @@
 @import "tailwindcss";
-@import "./styles/colors.css";
 
-:root {
-  /* Light theme */
-  --color-primary: var(--color-primary-light);
-  --color-secondary: var(--color-secondary-light);
-  --color-accent: var(--color-accent-light);
-  --color-tertiary: var(--color-tertiary-light);
-  --color-quaternary: var(--color-quaternary-light);
-
-  /* Background colors */
-  --background-default: #ffffff;
-  --background-muted: #f0f9ff;
-  --background-subtle: #f8fafc;
-
-  /* Foreground colors */
-  --foreground-default: #0f172a;
-  --foreground-muted: #64748b;
-  --foreground-subtle: #94a3b8;
-
-  /* Border colors */
-  --border-default: #e2e8f0;
-  --border-muted: #f1f5f9;
-  --border-subtle: #f8fafc;
-
-  /* State colors */
-  --focus-ring: var(--color-primary-light);
-  --success: #008000;
-  --warning: #ffa500;
-  --error: #ff0000;
-  --info: #0000ff;
-
-  /* Disabled states */
-  --disabled: #e2e8f0;
-  --disabled-light: #f1f5f9;
-  --disabled-dark: #64748b;
-}
-
-@theme inline {
-  --color-background: var(--background-default);
-  --color-foreground: var(--foreground-default);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    /* Dark theme */
-    --color-primary: var(--color-primary-dark);
-    --color-secondary: var(--color-secondary-dark);
-    --color-accent: var(--color-accent-dark);
-    --color-tertiary: var(--color-tertiary-dark);
-    --color-quaternary: var(--color-quaternary-dark);
+    /* Base theme colors */
+    --color-primary: var(--color-primary-light, #3B82F6);
+    --color-secondary: var(--color-secondary-light, #6366F1);
+    --color-accent: var(--color-accent-light, #F59E0B);
+    --color-tertiary: var(--color-tertiary-light, #10B981);
+    --color-quaternary: var(--color-quaternary-light, #8B5CF6);
 
     /* Background colors */
-    --background-default: #121212;
-    --background-muted: #1e1e1e;
-    --background-subtle: #27272a;
+    --color-background: #FFFFFF;
+    --color-background-subtle: #F3F4F6;
+    --color-background-muted: #F9FAFB;
 
     /* Foreground colors */
-    --foreground-default: #f8f8f8;
-    --foreground-muted: #a1a1aa;
-    --foreground-subtle: #71717a;
+    --color-foreground: #111827;
+    --color-foreground-subtle: #374151;
+    --color-foreground-muted: #6B7280;
 
     /* Border colors */
-    --border-default: #27272a;
-    --border-muted: #3f3f46;
-    --border-subtle: #52525b;
+    --color-border: #E5E7EB;
+    --color-border-subtle: #F3F4F6;
 
-    /* State colors remain the same for consistency */
-    --focus-ring: var(--color-primary-dark);
+    /* Status colors */
+    --color-error: #EF4444;
+    --color-error-dark: #DC2626;
+    --color-success: #10B981;
+
+    /* Animation */
+    --theme-transition: background-color 0.2s ease-in-out, 
+                       color 0.2s ease-in-out, 
+                       border-color 0.2s ease-in-out,
+                       opacity 0.2s ease-in-out;
+  }
+
+  .dark {
+    /* Base theme colors */
+    --color-primary: var(--color-primary-dark, #60A5FA);
+    --color-secondary: var(--color-secondary-dark, #818CF8);
+    --color-accent: var(--color-accent-dark, #FBBF24);
+    --color-tertiary: var(--color-tertiary-dark, #34D399);
+    --color-quaternary: var(--color-quaternary-dark, #A78BFA);
+
+    /* Background colors */
+    --color-background: #111827;
+    --color-background-subtle: #1F2937;
+    --color-background-muted: #374151;
+
+    /* Foreground colors */
+    --color-foreground: #F9FAFB;
+    --color-foreground-subtle: #E5E7EB;
+    --color-foreground-muted: #9CA3AF;
+
+    /* Border colors */
+    --color-border: #374151;
+    --color-border-subtle: #4B5563;
+
+    /* Status colors */
+    --color-error: #F87171;
+    --color-error-dark: #EF4444;
+    --color-success: #34D399;
+  }
+
+  /* Base styles */
+  html {
+    @apply antialiased;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Theme transitions */
+  *, *::before, *::after {
+    transition: var(--theme-transition);
   }
 }
 
-/* Base styles */
-body {
-  background: var(--background-default);
-  color: var(--foreground-default);
-  font-family: var(--font-sans, Arial), system-ui, -apple-system, sans-serif;
+/* Custom utilities */
+@utility bg-background {
+  background-color: var(--color-background);
 }
 
-/* Utility classes */
-.bg-gradient-brand {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary-light) 0%,
-    var(--color-secondary-light) 50%,
-    var(--color-accent-light) 100%
-  );
+@utility bg-background-subtle {
+  background-color: var(--color-background-subtle);
 }
 
-.dark .bg-gradient-brand {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary-dark) 0%,
-    var(--color-secondary-dark) 50%,
-    var(--color-accent-dark) 100%
-  );
+@utility bg-background-muted {
+  background-color: var(--color-background-muted);
 }
 
-.text-gradient-brand {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary-light) 0%,
-    var(--color-secondary-light) 100%
-  );
+@utility text-foreground {
+  color: var(--color-foreground);
+}
+
+@utility text-foreground-subtle {
+  color: var(--color-foreground-subtle);
+}
+
+@utility text-foreground-muted {
+  color: var(--color-foreground-muted);
+}
+
+@utility border-border {
+  border-color: var(--color-border);
+}
+
+@utility border-border-subtle {
+  border-color: var(--color-border-subtle);
+}
+
+@utility from-primary {
+  --tw-gradient-from: var(--color-primary) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(59 130 246 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+@utility to-secondary {
+  --tw-gradient-to: var(--color-secondary) var(--tw-gradient-to-position);
+}
+
+/* Theme-aware button utilities */
+@utility btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-background);
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+@utility btn-secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-background);
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+@utility btn-accent {
+  background-color: var(--color-accent);
+  color: var(--color-background);
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+/* Theme-aware text gradient */
+@utility text-gradient {
+  background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
-}
-
-.dark .text-gradient-brand {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary-dark) 0%,
-    var(--color-secondary-dark) 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: transparent;
 }

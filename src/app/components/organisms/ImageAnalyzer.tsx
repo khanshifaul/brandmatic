@@ -264,6 +264,44 @@ const createColorPalette = async (colors: ColorInfo[]) => {
 // Add an environment check helper
 const isDevelopment = process.env.NODE_ENV === 'development';
 
+interface ThemePreviewProps {
+  theme: 'light' | 'dark';
+  colors: {
+    [key: string]: ColorToken | Record<string, ColorToken>;
+  };
+  label: string;
+}
+
+function ThemePreview({ theme, colors, label }: ThemePreviewProps) {
+  return (
+    <div className={`p-6 rounded-lg shadow-lg ${theme === 'dark' ? 'bg-background-muted' : 'bg-background-subtle'}`}>
+      <h3 className="text-lg font-medium mb-4 text-foreground">
+        {label}
+      </h3>
+      <div className="grid grid-cols-2 gap-6">
+        {Object.entries(colors)
+          .filter(entry => typeof entry[1] === 'object' && 'value' in entry[1])
+          .map(([tokenName, color]) => (
+            <div key={tokenName} className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-lg shadow-md"
+                style={{ backgroundColor: (color as ColorToken).value }}
+              />
+              <div>
+                <p className="font-medium capitalize text-foreground">
+                  {tokenName}
+                </p>
+                <p className="text-sm text-foreground-muted">
+                  {(color as ColorToken).value}
+                </p>
+              </div>
+            </div>
+          ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ImageAnalyzer() {
   const [image, setImage] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<ColorAnalysis | null>(null);
@@ -493,17 +531,20 @@ Sort by percentage in descending order.`;
       </div>
 
       {loading && (
-        <div className="mt-4 text-center">
-          <p className="text-foreground">Analyzing logo...</p>
+        <div className="mt-8">
+          <div className="animate-pulse flex flex-col space-y-4">
+            <div className="h-4 bg-background-muted rounded w-3/4"></div>
+            <div className="h-4 bg-background-muted rounded w-1/2"></div>
+          </div>
         </div>
       )}
 
       {error && (
-        <div className="mt-4 text-center">
+        <div className="mt-8 text-center">
           <p className="text-error mb-4">{error}</p>
           <button
             onClick={handleRetry}
-            className="px-4 py-2 bg-primary hover:bg-secondary text-white rounded-lg transition-colors"
+            className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors"
           >
             Try Again
           </button>
@@ -511,7 +552,7 @@ Sort by percentage in descending order.`;
       )}
 
       {image && (
-        <div className="mt-6 relative w-full aspect-video">
+        <div className="mt-8 relative w-full aspect-video">
           <Image 
             src={image} 
             alt="Uploaded logo" 
@@ -523,100 +564,59 @@ Sort by percentage in descending order.`;
       )}
 
       {isGeneratingPalette && (
-        <div className="mt-4 text-center">
+        <div className="mt-8 text-center">
           <p className="text-foreground-muted">
-            Not enough distinct colors found. Generating an AI-powered color palette...
+            Generating an AI-powered color palette...
           </p>
         </div>
       )}
 
       {analysis && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-4 text-foreground">Brand Color Analysis</h2>
+        <div className="mt-8">
+          <h2 className="text-2xl font-semibold mb-6 text-foreground">Brand Color Analysis</h2>
 
-          {/* Original Logo Colors with Percentages */}
-          <div className="mb-6">
-            <h3 className="text-lg font-medium mb-3 text-foreground">Original Logo Colors</h3>
+          {/* Original Colors */}
+          <div className="mb-8">
+            <h3 className="text-lg font-medium mb-4 text-foreground">Original Logo Colors</h3>
             <div className="flex flex-wrap gap-4">
               {analysis.originalColors.map((color, index) => (
-                <div key={index} className="flex items-center gap-2">
+                <div key={index} className="flex items-center gap-3 bg-background-subtle p-3 rounded-lg">
                   <div
-                    className="w-8 h-8 rounded shadow"
+                    className="w-8 h-8 rounded-lg shadow-md"
                     style={{ backgroundColor: color.hex }}
                   />
                   <div>
-                    <p className="text-sm font-medium text-foreground">{color.hex}</p>
-                    <p className="text-xs text-foreground-muted">{color.percentage.toFixed(1)}%</p>
+                    <p className="font-medium text-foreground">{color.hex}</p>
+                    <p className="text-sm text-foreground-muted">{color.percentage.toFixed(1)}%</p>
                   </div>
                 </div>
               ))}
             </div>
-            <p className="mt-2 text-sm text-foreground-subtle">
-              Colors are assigned roles based on their prominence in the logo, excluding black and white.
-            </p>
           </div>
 
-          {/* Generated Color Tokens */}
-          <div className="space-y-6">
-            {/* Light Theme Colors */}
-            <div className="p-4 bg-background-subtle rounded-lg shadow">
-              <h3 className="text-lg font-medium mb-3 text-foreground">Light Theme</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {Object.entries(analysis.color.light)
-                  .filter(entry => typeof entry[1] === 'object' && 'value' in entry[1])
-                  .map(([tokenName, color]) => (
-                    <div key={tokenName} className="flex items-center gap-2">
-                      <div
-                        className="w-8 h-8 rounded shadow"
-                        style={{ backgroundColor: (color as ColorToken).value }}
-                      />
-                      <div>
-                        <p className="font-medium capitalize text-foreground">{tokenName}</p>
-                        <p className="text-sm text-foreground-muted">{(color as ColorToken).value}</p>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-
-            {/* Dark Theme Colors */}
-            <div className="p-4 bg-background-muted rounded-lg shadow">
-              <h3 className="text-lg font-medium mb-3 text-foreground">Dark Theme</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {Object.entries(analysis.color.dark)
-                  .filter(entry => typeof entry[1] === 'object' && 'value' in entry[1])
-                  .map(([tokenName, color]) => (
-                    <div key={tokenName} className="flex items-center gap-2">
-                      <div
-                        className="w-8 h-8 rounded shadow"
-                        style={{ backgroundColor: (color as ColorToken).value }}
-                      />
-                      <div>
-                        <p className="font-medium capitalize text-foreground">{tokenName}</p>
-                        <p className="text-sm text-foreground-muted">{(color as ColorToken).value}</p>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
+          {/* Theme Previews */}
+          <div className="space-y-8">
+            <ThemePreview theme="light" colors={analysis.color.light} label="Light Theme" />
+            <ThemePreview theme="dark" colors={analysis.color.dark} label="Dark Theme" />
           </div>
 
-          <div className="flex gap-4 mt-6">
+          {/* Action Buttons */}
+          <div className="flex gap-4 mt-8">
             {isProduction ? (
               <div className="w-full p-4 bg-background-muted rounded-lg">
                 <p className="text-foreground-muted text-center">
                   Color updates are only available in development mode. 
-                  To update colors, run this application locally using <code className="bg-background-subtle px-2 py-1 rounded">npm run dev</code>
+                  Run <code className="bg-background-subtle px-2 py-1 rounded">npm run dev</code> locally.
                 </p>
               </div>
             ) : (
               <>
                 <button
                   onClick={updateColorsJson}
-                  className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
+                  className={`flex-1 py-3 px-6 rounded-lg transition-colors ${
                     updateSuccess
                       ? 'bg-success text-white'
-                      : 'bg-primary hover:bg-secondary text-white'
+                      : 'bg-primary hover:bg-primary/90 text-white'
                   }`}
                 >
                   {updateSuccess ? 'Colors Updated!' : 'Update colors.json'}
@@ -625,10 +625,10 @@ Sort by percentage in descending order.`;
                 <button
                   onClick={regenerateAndRestart}
                   disabled={isRegeneratingVars}
-                  className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
+                  className={`flex-1 py-3 px-6 rounded-lg transition-colors ${
                     isRegeneratingVars
-                      ? 'bg-disabled text-foreground-muted cursor-not-allowed'
-                      : 'bg-accent hover:bg-tertiary text-white'
+                      ? 'bg-background-muted text-foreground-muted cursor-not-allowed'
+                      : 'bg-accent hover:bg-accent/90 text-white'
                   }`}
                 >
                   {isRegeneratingVars ? 'Regenerating...' : 'Regenerate & Restart'}
@@ -636,10 +636,6 @@ Sort by percentage in descending order.`;
               </>
             )}
           </div>
-
-          {error && (
-            <p className="mt-4 text-error text-center">{error}</p>
-          )}
         </div>
       )}
     </div>

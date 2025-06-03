@@ -45,19 +45,38 @@ const generateThemeVars = () => {
     .map(([key, value]) => `  --color-${key}-dark: ${value.value};`)
     .join('\n');
 
-  // Create the CSS content
-  const css = `:root {
-/* Light theme color tokens */
+  // Create the CSS content with theme variables
+  const css = `/* Dynamic color variables - Generated ${new Date().toISOString()} */
+:root {
+  /* Light theme color tokens */
 ${lightVars}
+
+  /* Main theme variables */
+  --color-primary: var(--color-primary-light);
+  --color-secondary: var(--color-secondary-light);
+  --color-accent: var(--color-accent-light);
+  --color-tertiary: var(--color-tertiary-light);
+  --color-quaternary: var(--color-quaternary-light);
+
+  /* Theme transition */
+  --theme-transition: background-color 0.2s ease-in-out,
+                     color 0.2s ease-in-out,
+                     border-color 0.2s ease-in-out,
+                     opacity 0.2s ease-in-out;
 }
 
-/* Inject dark theme tokens */
-@media (prefers-color-scheme: dark) {
-  :root {
+/* Dark theme tokens */
+.dark {
+  /* Dark theme color tokens */
 ${darkVars}
-  }
-}
-`;
+
+  /* Update main theme variables */
+  --color-primary: var(--color-primary-dark);
+  --color-secondary: var(--color-secondary-dark);
+  --color-accent: var(--color-accent-dark);
+  --color-tertiary: var(--color-tertiary-dark);
+  --color-quaternary: var(--color-quaternary-dark);
+}`;
 
   // Write to a new file
   const outputPath = path.join(process.cwd(), 'src/app/styles/colors.css');

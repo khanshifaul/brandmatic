@@ -3,10 +3,12 @@
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/lib/redux/store';
 import { toggleCart } from '@/lib/redux/features/cart/cartSlice';
+import { useTheme } from '@/lib/theme/ThemeContext';
 
 export default function Navbar() {
   const dispatch = useAppDispatch();
   const { items } = useAppSelector((state) => state.cart);
+  const { theme, toggleTheme } = useTheme();
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -32,7 +34,14 @@ export default function Navbar() {
               </Link>
             </div>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-foreground-muted hover:text-foreground"
+              aria-label="Toggle theme"
+            >
+              {theme === 'light' ? '🌙' : '☀️'}
+            </button>
             <button
               onClick={() => dispatch(toggleCart())}
               className="relative p-2 text-foreground-muted hover:text-foreground"

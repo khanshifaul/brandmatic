@@ -2,53 +2,53 @@
   "color": {
     "light": {
       "primary": {
-        "value": "#5B83A6",
+        "value": "#F5E9D8",
         "type": "color"
       },
       "secondary": {
-        "value": "#97A7B6",
+        "value": "#8A5436",
         "type": "color"
       },
       "accent": {
-        "value": "#D6E2E6",
+        "value": "#67A5CD",
         "type": "color"
       },
       "tertiary": {
-        "value": "#223946",
+        "value": "#3071C5",
         "type": "color"
       },
       "quaternary": {
-        "value": "#785744",
+        "value": "#D2211C",
         "type": "color"
       },
       "focus": {
-        "value": "#5B83A6",
+        "value": "#F5E9D8",
         "type": "color"
       }
     },
     "dark": {
       "primary": {
-        "value": "#76aad7",
+        "value": "#aba397",
         "type": "color"
       },
       "secondary": {
-        "value": "#69747f",
+        "value": "#b36d46",
         "type": "color"
       },
       "accent": {
-        "value": "#959ea1",
+        "value": "#48738f",
         "type": "color"
       },
       "tertiary": {
-        "value": "#2c4a5b",
+        "value": "#3e92ff",
         "type": "color"
       },
       "quaternary": {
-        "value": "#9c7158",
+        "value": "#ff2a24",
         "type": "color"
       },
       "focus": {
-        "value": "#76aad7",
+        "value": "#aba397",
         "type": "color"
       }
     }
