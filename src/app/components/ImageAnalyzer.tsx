@@ -273,12 +273,13 @@ export default function ImageAnalyzer() {
   const [isGeneratingPalette, setIsGeneratingPalette] = useState(false);
   const [isRegeneratingVars, setIsRegeneratingVars] = useState(false);
   const [isProduction, setIsProduction] = useState(false);
+  const [currentImage, setCurrentImage] = useState<File | null>(null);
 
   useEffect(() => {
     setIsProduction(!isDevelopment);
   }, []);
 
-  const analyzeImage = async (base64Image: string) => {
+  const analyzeImage = async (base64Image: string, imageFile: File) => {
     try {
       setLoading(true);
       setError(null);
@@ -326,7 +327,6 @@ Sort by percentage in descending order.`;
           setIsGeneratingPalette(true);
         }
 
-        // Create harmonious color palette
         const palette = await createColorPalette(colorInfo);
 
         const colorAnalysis = {
@@ -337,7 +337,7 @@ Sort by percentage in descending order.`;
         setAnalysis(colorAnalysis);
       } catch (parseError) {
         console.error('Failed to parse JSON:', parseError);
-        setError('Failed to parse color analysis. Please try again.');
+        throw new Error('Failed to parse color analysis');
       }
     } catch (err) {
       setError('Failed to analyze image. Please try again.');
@@ -348,17 +348,27 @@ Sort by percentage in descending order.`;
     }
   };
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    if (file) {
-      setLoading(true);
-      setError(null);
-      
+  const handleRetry = async () => {
+    if (currentImage) {
       const reader = new FileReader();
       reader.onload = async (e) => {
         const base64 = e.target?.result as string;
         setImage(base64);
-        await analyzeImage(base64);
+        await analyzeImage(base64, currentImage);
+      };
+      reader.readAsDataURL(currentImage);
+    }
+  };
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (file) {
+      setCurrentImage(file);
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64 = e.target?.result as string;
+        setImage(base64);
+        await analyzeImage(base64, file);
       };
       reader.readAsDataURL(file);
     }
@@ -489,8 +499,14 @@ Sort by percentage in descending order.`;
       )}
 
       {error && (
-        <div className="mt-4 text-error text-center">
-          <p>{error}</p>
+        <div className="mt-4 text-center">
+          <p className="text-error mb-4">{error}</p>
+          <button
+            onClick={handleRetry}
+            className="px-4 py-2 bg-primary hover:bg-secondary text-white rounded-lg transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       )}
 
