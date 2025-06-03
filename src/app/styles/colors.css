@@ -1,41 +1,21 @@
 :root {
 /* Light theme color tokens */
-  --color-primary-light: #228B22;
-  --color-secondary-light: #4169E1;
-  --color-accent-light: #FF4500;
-  --color-tertiary-light: #F0E68C;
-  --color-quaternary-light: #A9A9A9;
-  --color-focus-light: #228B22;
-  --color-success-light: #008000;
-  --color-warning-light: #ffa500;
-  --color-error-light: #ff0000;
-  --color-info-light: #0000ff;
-  --color-disabled-light: #e2e8f0;
-  --color-disabled-light-light: #f1f5f9;
-  --color-disabled-dark-light: #64748b;
-  --color-transparent-light: transparent;
-  --color-white-light: #ffffff;
-  --color-black-light: #000000;
+  --color-primary-light: #435B33;
+  --color-secondary-light: #B58C87;
+  --color-accent-light: #0F254B;
+  --color-tertiary-light: #4A4E27;
+  --color-quaternary-light: #406758;
+  --color-focus-light: #435B33;
 }
 
 /* Inject dark theme tokens */
 @media (prefers-color-scheme: dark) {
   :root {
-  --color-primary-dark: #2cb42c;
-  --color-secondary-dark: #5488ff;
-  --color-accent-dark: #ff5900;
-  --color-tertiary-dark: #a8a162;
-  --color-quaternary-dark: #767676;
-  --color-focus-dark: #2cb42c;
-  --color-success-dark: #008000;
-  --color-warning-dark: #ffa500;
-  --color-error-dark: #ff0000;
-  --color-info-dark: #0000ff;
-  --color-disabled-dark: #e2e8f0;
-  --color-disabled-light-dark: #f1f5f9;
-  --color-disabled-dark-dark: #64748b;
-  --color-transparent-dark: transparent;
-  --color-white-dark: #ffffff;
-  --color-black-dark: #000000;
+  --color-primary-dark: #577642;
+  --color-secondary-dark: #7e625e;
+  --color-accent-dark: #133061;
+  --color-tertiary-dark: #606532;
+  --color-quaternary-dark: #538572;
+  --color-focus-dark: #577642;
   }
 }

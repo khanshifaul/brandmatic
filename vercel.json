@@ -2,9 +2,5 @@
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "framework": "nextjs",
-  "regions": ["all"],
-  "env": {
-    "NEXT_PUBLIC_GOOGLE_GEMINI_API_KEY": "@google_gemini_api_key"
-  }
+  "framework": "nextjs"
 } 

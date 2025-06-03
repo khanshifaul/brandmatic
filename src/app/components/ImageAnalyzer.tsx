@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import Image from 'next/image';
 
 interface ColorToken {
   value: string;
@@ -260,22 +261,8 @@ const createColorPalette = async (colors: ColorInfo[]) => {
   };
 };
 
-const regenerateTokens = async () => {
-  try {
-    const response = await fetch('/api/generate-tokens', {
-      method: 'POST'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to regenerate tokens');
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error regenerating tokens:', error);
-    return false;
-  }
-};
+// Add an environment check helper
+const isDevelopment = process.env.NODE_ENV === 'development';
 
 export default function ImageAnalyzer() {
   const [image, setImage] = useState<string | null>(null);
@@ -285,6 +272,11 @@ export default function ImageAnalyzer() {
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [isGeneratingPalette, setIsGeneratingPalette] = useState(false);
   const [isRegeneratingVars, setIsRegeneratingVars] = useState(false);
+  const [isProduction, setIsProduction] = useState(false);
+
+  useEffect(() => {
+    setIsProduction(!isDevelopment);
+  }, []);
 
   const analyzeImage = async (base64Image: string) => {
     try {
@@ -503,8 +495,14 @@ Sort by percentage in descending order.`;
       )}
 
       {image && (
-        <div className="mt-6">
-          <img src={image} alt="Uploaded logo" className="max-w-full h-auto rounded-lg shadow-lg" />
+        <div className="mt-6 relative w-full aspect-video">
+          <Image 
+            src={image} 
+            alt="Uploaded logo" 
+            fill
+            className="object-contain rounded-lg shadow-lg"
+            priority
+          />
         </div>
       )}
 
@@ -549,15 +547,15 @@ Sort by percentage in descending order.`;
               <h3 className="text-lg font-medium mb-3 text-foreground">Light Theme</h3>
               <div className="grid grid-cols-2 gap-4">
                 {Object.entries(analysis.color.light)
-                  .filter(([key, value]) => typeof value === 'object' && 'value' in value)
-                  .map(([key, color]) => (
-                    <div key={key} className="flex items-center gap-2">
+                  .filter(entry => typeof entry[1] === 'object' && 'value' in entry[1])
+                  .map(([tokenName, color]) => (
+                    <div key={tokenName} className="flex items-center gap-2">
                       <div
                         className="w-8 h-8 rounded shadow"
                         style={{ backgroundColor: (color as ColorToken).value }}
                       />
                       <div>
-                        <p className="font-medium capitalize text-foreground">{key}</p>
+                        <p className="font-medium capitalize text-foreground">{tokenName}</p>
                         <p className="text-sm text-foreground-muted">{(color as ColorToken).value}</p>
                       </div>
                     </div>
@@ -570,15 +568,15 @@ Sort by percentage in descending order.`;
               <h3 className="text-lg font-medium mb-3 text-foreground">Dark Theme</h3>
               <div className="grid grid-cols-2 gap-4">
                 {Object.entries(analysis.color.dark)
-                  .filter(([key, value]) => typeof value === 'object' && 'value' in value)
-                  .map(([key, color]) => (
-                    <div key={key} className="flex items-center gap-2">
+                  .filter(entry => typeof entry[1] === 'object' && 'value' in entry[1])
+                  .map(([tokenName, color]) => (
+                    <div key={tokenName} className="flex items-center gap-2">
                       <div
                         className="w-8 h-8 rounded shadow"
                         style={{ backgroundColor: (color as ColorToken).value }}
                       />
                       <div>
-                        <p className="font-medium capitalize text-foreground">{key}</p>
+                        <p className="font-medium capitalize text-foreground">{tokenName}</p>
                         <p className="text-sm text-foreground-muted">{(color as ColorToken).value}</p>
                       </div>
                     </div>
@@ -588,28 +586,39 @@ Sort by percentage in descending order.`;
           </div>
 
           <div className="flex gap-4 mt-6">
-            <button
-              onClick={updateColorsJson}
-              className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
-                updateSuccess
-                  ? 'bg-success text-white'
-                  : 'bg-primary hover:bg-secondary text-white'
-              }`}
-            >
-              {updateSuccess ? 'Colors Updated!' : 'Update colors.json'}
-            </button>
+            {isProduction ? (
+              <div className="w-full p-4 bg-background-muted rounded-lg">
+                <p className="text-foreground-muted text-center">
+                  Color updates are only available in development mode. 
+                  To update colors, run this application locally using <code className="bg-background-subtle px-2 py-1 rounded">npm run dev</code>
+                </p>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={updateColorsJson}
+                  className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
+                    updateSuccess
+                      ? 'bg-success text-white'
+                      : 'bg-primary hover:bg-secondary text-white'
+                  }`}
+                >
+                  {updateSuccess ? 'Colors Updated!' : 'Update colors.json'}
+                </button>
 
-            <button
-              onClick={regenerateAndRestart}
-              disabled={isRegeneratingVars}
-              className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
-                isRegeneratingVars
-                  ? 'bg-disabled text-foreground-muted cursor-not-allowed'
-                  : 'bg-accent hover:bg-tertiary text-white'
-              }`}
-            >
-              {isRegeneratingVars ? 'Regenerating...' : 'Regenerate & Restart'}
-            </button>
+                <button
+                  onClick={regenerateAndRestart}
+                  disabled={isRegeneratingVars}
+                  className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
+                    isRegeneratingVars
+                      ? 'bg-disabled text-foreground-muted cursor-not-allowed'
+                      : 'bg-accent hover:bg-tertiary text-white'
+                  }`}
+                >
+                  {isRegeneratingVars ? 'Regenerating...' : 'Regenerate & Restart'}
+                </button>
+              </>
+            )}
           </div>
 
           {error && (
