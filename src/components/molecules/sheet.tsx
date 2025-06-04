@@ -36,10 +36,18 @@ const positionClasses = {
   bottom: "bottom-0 left-0 w-full",
 };
 
+const sizeClasses = {
+  sm: "w-full sm:w-[380px]",
+  md: "w-full sm:w-[480px]",
+  lg: "w-full sm:w-[580px]",
+  full: "w-full",
+};
+
 const Sheet: React.FC<SheetProps> = ({
   isOpen,
   onClose,
   position = "right",
+  size = "md",
   children,
   className = "",
   disableClickOutside = false,
@@ -58,7 +66,6 @@ const Sheet: React.FC<SheetProps> = ({
 
   useEffect(() => {
     setIsMounted(true);
-    // Ensure we have a single portal container
     if (typeof window !== 'undefined') {
       let container = document.getElementById('sheet-portal-container');
       if (!container) {
@@ -78,7 +85,6 @@ const Sheet: React.FC<SheetProps> = ({
     };
   }, []);
 
-  // Prevent body scrolling when sheet is open
   useEffect(() => {
     if (preventScroll) {
       if (isOpen) {
@@ -87,7 +93,6 @@ const Sheet: React.FC<SheetProps> = ({
         document.body.style.overflow = "";
       }
     }
-
     return () => {
       if (preventScroll) {
         document.body.style.overflow = "";
@@ -95,19 +100,16 @@ const Sheet: React.FC<SheetProps> = ({
     };
   }, [isOpen, preventScroll]);
 
-  // Handle escape key press
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen && !disableEscapeKey) {
         onClose();
       }
     };
-
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose, disableEscapeKey]);
 
-  // Focus management
   useEffect(() => {
     if (isOpen) {
       if (initialFocusRef?.current) {
@@ -122,18 +124,15 @@ const Sheet: React.FC<SheetProps> = ({
     }
   }, [isOpen, initialFocusRef]);
 
-  // Handle click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (!disableClickOutside && sheetRef.current && !sheetRef.current.contains(e.target as Node)) {
         onClose();
       }
     };
-
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -162,33 +161,35 @@ const Sheet: React.FC<SheetProps> = ({
     <AnimatePresence mode="wait">
       {isOpen && (
         <>
-          {/* Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className={twMerge("fixed inset-0 z-40 bg-black/50 backdrop-blur-sm", overlayClassName)}
+            className={twMerge(
+              "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm",
+              overlayClassName
+            )}
             onClick={disableClickOutside ? undefined : onClose}
           />
 
-          {/* Sheet */}
           <motion.div
             {...getAnimationProps()}
             ref={sheetRef}
             transition={{ type: "spring", damping: 25, stiffness: 400 }}
-            role='dialog'
-            aria-modal='true'
+            role="dialog"
+            aria-modal="true"
             aria-labelledby={title ? "sheet-title" : undefined}
             className={twMerge(
-              "fixed z-[10000] bg-white dark:bg-gray-800 w-fit",
+              "fixed z-[51] bg-background border-l border-border shadow-lg",
               position === "left" || position === "right" ? "h-svh" : "w-full",
               positionClasses[position],
+              sizeClasses[size],
               className
             )}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className='w-full h-full flex flex-col'>
+            <div className="flex h-full flex-col">
               {showHeader && (
                 <SheetHeader
                   onClose={onClose}
@@ -196,7 +197,7 @@ const Sheet: React.FC<SheetProps> = ({
                   className={position === "bottom" ? "order-last" : ""}
                 >
                   {title && (
-                    <h2 id='sheet-title' className='text-xl font-semibold'>
+                    <h2 id="sheet-title" className="text-lg font-semibold">
                       {title}
                     </h2>
                   )}
@@ -227,14 +228,20 @@ const SheetHeader = ({ children, className = "", showCloseButton = true, onClose
   return (
     <header
       className={twMerge(
-        "z-50 w-full flex items-center justify-between border-b p-4 dark:border-gray-700 bg-white",
+        "sticky top-0 z-50 flex items-center justify-between border-b border-border bg-background/95 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60",
         className
       )}
     >
-      <div className='flex-1'>{children}</div>
+      <div className="flex-1">{children}</div>
       {showCloseButton && onClose && (
-        <Button title='Close' aria-label='Close sheet' onClick={onClose} variant='ghost' className='rounded-full'>
-          <FiX size={20} />
+        <Button
+          onClick={onClose}
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 rounded-full p-0"
+        >
+          <FiX className="h-4 w-4" />
+          <span className="sr-only">Close</span>
         </Button>
       )}
     </header>
@@ -247,7 +254,11 @@ interface SheetContentProps {
 }
 
 const SheetContent = ({ children, className = "" }: SheetContentProps) => {
-  return <div className={twMerge(" flex-1 overflow-y-aut scrollbar-thin", className)}>{children}</div>;
+  return (
+    <div className={twMerge("flex-1 overflow-y-auto overscroll-contain", className)}>
+      {children}
+    </div>
+  );
 };
 
 interface SheetFooterProps {
@@ -259,7 +270,7 @@ const SheetFooter = ({ children, className = "" }: SheetFooterProps) => {
   return (
     <footer
       className={twMerge(
-        "absolute bottom-0 w-full border-t p-0 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50",
+        "sticky bottom-0 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
         className
       )}
     >

@@ -1,51 +1,34 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/atoms/button';
+import { Button, ButtonProps } from '@/components/atoms/button';
+import { Product } from '@/types/product';
 import { useAppDispatch } from '@/lib/store';
 import { addItem } from '@/lib/features/cart/cartSlice';
-import { Product } from '@/types/product';
-import { cn } from '@/utils/cn';
-import { FiShoppingCart } from 'react-icons/fi';
+import { useState } from 'react';
 
-interface AddToCartBtnProps {
+export interface AddToCartBtnProps extends Omit<ButtonProps, 'onClick'> {
   product: Product;
-  variant?: 'default' | 'outline' | 'ghost';
-  size?: 'default' | 'sm' | 'lg';
-  className?: string;
+  quantity?: number;
+  isDisabled?: boolean;
 }
 
-export function AddToCartBtn({ 
-  product, 
-  variant = 'default',
-  size = 'default',
-  className 
-}: AddToCartBtnProps) {
-  const dispatch = useAppDispatch();
+export function AddToCartBtn({ product, quantity = 1, isDisabled, ...props }: AddToCartBtnProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useAppDispatch();
 
-  const handleAddToCart = async () => {
-    setIsLoading(true);
+  const handleClick = async () => {
     try {
+      setIsLoading(true);
       dispatch(addItem({
         productId: product._id,
         name: product.name,
-        price: Number(product.variantsId[0]?.selling_price || 0),
-        image: {
-          _id: product.images[0]._id,
-          image: product.images[0].image,
-        },
-        quantity: 1,
+        price: Number(product.price),
+        image: product.images?.[0] || { _id: '', image: { secure_url: '', public_id: '' } },
+        quantity,
         maxStock: product.total_stock,
-        variant: product.variantsId[0] ? {
-          _id: product.variantsId[0]._id,
-          name: product.variantsId[0].name,
-          selling_price: product.variantsId[0].selling_price,
-          variants_stock: product.variantsId[0].variants_stock,
-        } : undefined,
       }));
     } catch (error) {
-      console.error('Error adding item to cart:', error);
+      console.error('Failed to add to cart:', error);
     } finally {
       setIsLoading(false);
     }
@@ -53,17 +36,11 @@ export function AddToCartBtn({
 
   return (
     <Button
-      variant={variant}
-      size={size}
-      onClick={handleAddToCart}
-      disabled={product.total_stock <= 0 || isLoading}
-      className={cn(
-        'gap-2',
-        className
-      )}
+      onClick={handleClick}
+      disabled={isLoading || isDisabled}
+      {...props}
     >
-      <FiShoppingCart className="h-4 w-4" />
-      {product.total_stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
+      {isLoading ? 'Adding...' : 'Add to Cart'}
     </Button>
   );
 } 

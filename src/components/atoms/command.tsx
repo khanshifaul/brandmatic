@@ -123,6 +123,7 @@ const CommandItem = React.forwardRef<
       className
     )}
     role="option"
+    aria-selected={false}
     {...props}
   />
 ));

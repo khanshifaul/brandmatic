@@ -1,8 +1,12 @@
 import type { Action, PayloadAction } from "@reduxjs/toolkit";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import type { BaseQueryFn, FetchArgs, FetchBaseQueryError, FetchBaseQueryMeta } from "@reduxjs/toolkit/query";
 import { HYDRATE } from "next-redux-wrapper";
-import { ApiResponse, Business, Product } from "./types";
+import { ApiResponse } from "@/types/apiResponse";
+import { Business } from "@/types/business";
+import { Product } from "@/types/product";
 import { Category } from "@/types/category";
+import { OnlineOrderPayload, OnlineOrderResponse } from "@/types/onlineOrder";
 
 // Constants
 const PUBLIC_API_URL = "/api";
@@ -10,59 +14,72 @@ const OWNER_ID = process.env.NEXT_PUBLIC_OWNER_ID || "6829ddabc20c6404b3e2a66b";
 const BUSINESS_ID = process.env.NEXT_PUBLIC_BUSINESS_ID || "682b5d636be45193cf943b85";
 
 // Type Guard for HYDRATE
-function isHydrateAction(action: Action): action is PayloadAction<Record<string, unknown>> {
+function isHydrateAction(action: Action): action is PayloadAction<any> {
   return action.type === HYDRATE;
 }
 
-// Define the API endpoints
-type Endpoints = {
-  getBusiness: { response: Business; args: void };
-  getProducts: { response: Product[]; args: Partial<{ search?: string; page?: number; limit?: number; category?: string }> };
-  getProduct: { response: Product; args: string };
-  getCategories: { response: Category[]; args: void };
-};
+// API Types
+interface GetProductsParams {
+  search?: string;
+  page?: number;
+  limit?: number;
+  category?: string;
+  featured?: boolean;
+  _id?: string;
+}
 
 // API Definition
 export const publicApi = createApi({
   reducerPath: "publicApi",
   baseQuery: fetchBaseQuery({ baseUrl: PUBLIC_API_URL }),
-  tagTypes: ["Product", "Products", "Category", "Business"],
-  extractRehydrationInfo(action, { reducerPath }) {
+  tagTypes: ["Product", "Products", "Category", "Business"] as const,
+  extractRehydrationInfo(action: Action, { reducerPath }: { reducerPath: string }) {
     if (isHydrateAction(action)) {
-      return action.payload[reducerPath] as any;
+      return action.payload[reducerPath];
     }
     return undefined;
   },
   endpoints: (builder) => ({
-    getBusiness: builder.query<Endpoints["getBusiness"]["response"], Endpoints["getBusiness"]["args"]>({
+    getBusiness: builder.query<Business, void>({
       query: () => `/public/${OWNER_ID}/${BUSINESS_ID}`,
       transformResponse: (res: ApiResponse<Business[]>) => res.data[0],
       providesTags: ["Business"],
     }),
 
-    getProducts: builder.query<Endpoints["getProducts"]["response"], Endpoints["getProducts"]["args"]>({
-      query: (params = {}) => ({
-        url: "/products",
-        params,
+    getProducts: builder.query<Product[], GetProductsParams | undefined>({
+      query: (params) => ({
+        url: `/public/${OWNER_ID}/${BUSINESS_ID}/products`,
+        params: params || undefined,
       }),
       transformResponse: (res: ApiResponse<Product[]>) => res.data,
       providesTags: (result) =>
         result
-          ? [...result.map(({ _id }) => ({ type: "Product" as const, id: _id })), { type: "Products", id: "LIST" }]
-          : [{ type: "Products", id: "LIST" }],
+          ? [...result.map(({ _id }) => ({ type: "Product" as const, id: _id })), "Products"]
+          : ["Products"],
     }),
 
-    getProduct: builder.query<Endpoints["getProduct"]["response"], Endpoints["getProduct"]["args"]>({
-      query: (productId) => `/products/${productId}`,
+    getProduct: builder.query<Product, string>({
+      query: (productId) => `/public/${OWNER_ID}/${BUSINESS_ID}/products/${productId}`,
       transformResponse: (res: ApiResponse<Product>) => res.data,
-      providesTags: (result) => (result ? [{ type: "Product", id: result._id }] : []),
+      providesTags: (_result, _error, id) => [{ type: "Product", id }],
     }),
 
-    getCategories: builder.query<Endpoints["getCategories"]["response"], Endpoints["getCategories"]["args"]>({
-      query: () => "/categories",
+    getCategories: builder.query<Category[], void>({
+      query: () => `/public/${OWNER_ID}/${BUSINESS_ID}/categories`,
       transformResponse: (res: ApiResponse<Category[]>) => res.data,
       providesTags: (result) =>
-        result ? result.map((category) => ({ type: "Category" as const, id: category._id })) : [],
+        result
+          ? [...result.map(({ _id }) => ({ type: "Category" as const, id: _id }))]
+          : ["Category"],
+    }),
+
+    createOnlineOrder: builder.mutation<OnlineOrderResponse, OnlineOrderPayload>({
+      query: (orderData) => ({
+        url: `/public/${OWNER_ID}/${BUSINESS_ID}/online-order`,
+        method: "POST",
+        body: orderData,
+      }),
+      invalidatesTags: ["Products"],
     }),
   }),
 });
@@ -73,4 +90,5 @@ export const {
   useGetProductsQuery,
   useGetProductQuery,
   useGetCategoriesQuery,
+  useCreateOnlineOrderMutation,
 } = publicApi; 

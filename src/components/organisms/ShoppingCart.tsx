@@ -80,7 +80,7 @@ export default function ShoppingCart() {
                       onClick={() =>
                         dispatch(
                           updateQuantity({
-                            id: item.productId,
+                            productId: item.productId,
                             quantity: item.quantity - 1,
                           })
                         )
@@ -95,7 +95,7 @@ export default function ShoppingCart() {
                       onClick={() =>
                         dispatch(
                           updateQuantity({
-                            id: item.productId,
+                            productId: item.productId,
                             quantity: item.quantity + 1,
                           })
                         )

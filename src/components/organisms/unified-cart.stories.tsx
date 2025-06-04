@@ -1,8 +1,7 @@
 import { Providers } from "@/lib/providers";
 import { TCartItem } from "@/types/cart";
 import type { Meta, StoryObj } from "@storybook/react";
-import { CartSheet } from "./cart-sheet";
-
+import { UnifiedCart } from "./unified-cart";
 
 // Mock hooks (basic mocks without jest.mock calls here)
 // Mock the useBusiness hook to return mock data
@@ -25,18 +24,14 @@ const mockUseCart = (items: TCartItem[] = []) => ({
   openCart: () => console.log("Open cart"),
 });
 
-interface CartSheetProps {
-  initialItems?: TCartItem[];
-}
-
 const meta = {
-  title: 'Components/Organisms/CartSheet',
-  component: CartSheet,
+  title: 'Components/Organisms/UnifiedCart',
+  component: UnifiedCart,
   parameters: {
     layout: 'centered',
   },
   tags: ['autodocs'],
-} satisfies Meta<typeof CartSheet>;
+} satisfies Meta<typeof UnifiedCart>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -86,49 +81,18 @@ const mockCartItems: TCartItem[] = [
   },
 ];
 
-export const Default: Story = {
+export const SheetMode: Story = {
   args: {
-    items: mockCartItems,
+    mode: 'sheet',
     isOpen: true,
     onClose: () => {},
   },
 };
 
-export const Empty: Story = {
+export const DrawerMode: Story = {
   args: {
-    items: [],
+    mode: 'drawer',
     isOpen: true,
     onClose: () => {},
   },
-};
-
-export const WithMultipleItems: Story = {
-  args: {
-    items: [
-      ...mockCartItems,
-      {
-        productId: '3',
-        name: 'Sample Product 3',
-        price: 199.99,
-        image: {
-          _id: '3',
-          image: {
-            public_id: 'sample3',
-            secure_url: 'https://via.placeholder.com/400',
-            optimizeUrl: 'https://via.placeholder.com/400',
-          },
-        },
-        quantity: 1,
-        maxStock: 3,
-        variant: {
-          _id: '3',
-          name: 'Limited Edition',
-          selling_price: '199.99',
-          variants_stock: 3,
-        },
-      },
-    ],
-    isOpen: true,
-    onClose: () => {},
-  },
-};
+}; 

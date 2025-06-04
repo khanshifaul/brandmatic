@@ -1,5 +1,6 @@
 "use client";
 
+import { Footer } from "@/components/organisms/footer";
 import Navbar from "@/components/organisms/Navbar";
 import { cn } from "@/utils/cn";
 import { Inter } from "next/font/google";
@@ -14,6 +15,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         <div className='relative flex min-h-screen flex-col'>
           <Navbar />
           <main className='flex-1'>{children}</main>
+          <Footer />
           <Toaster position='top-center' />
         </div>
       

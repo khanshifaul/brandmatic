@@ -35,10 +35,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang='en' suppressHydrationWarning>
-      <body suppressHydrationWarning>
+    <html lang='en' suppressHydrationWarning className="scroll-smooth">
+      <body className="min-h-screen bg-background font-sans antialiased transition-colors duration-300" suppressHydrationWarning>
         <Providers>
-          {children}
+          <main className="relative flex min-h-screen flex-col">
+            {children}
+          </main>
         </Providers>
       </body>
     </html>

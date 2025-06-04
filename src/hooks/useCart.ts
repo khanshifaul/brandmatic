@@ -40,7 +40,7 @@ export function useCart() {
     isOpen,
     addItem: (item: TCartItem) => dispatch(addItem(item)),
     removeItem: (id: string) => dispatch(removeItem(id)),
-    updateQuantity: (id: string, quantity: number) => dispatch(updateQuantity({ id, quantity })),
+    updateQuantity: (productId: string, quantity: number) => dispatch(updateQuantity({ productId, quantity })),
     clearCart: () => dispatch(clearCart()),
     toggleCart: () => dispatch(toggleCart()),
   };
