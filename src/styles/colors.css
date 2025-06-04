@@ -1,12 +1,12 @@
-/* Dynamic color variables - Generated 2025-06-04T06:41:09.719Z */
+/* Dynamic color variables - Generated 2025-06-03T20:03:34.895Z */
 :root {
   /* Light theme color tokens */
-  --color-primary-light: #B39665;
-  --color-secondary-light: #87A6C0;
-  --color-accent-light: #323435;
-  --color-tertiary-light: #47839B;
-  --color-quaternary-light: #786383;
-  --color-focus-light: #B39665;
+  --color-primary-light: #269332;
+  --color-secondary-light: #DA291C;
+  --color-accent-light: #31A276;
+  --color-tertiary-light: #45831D;
+  --color-quaternary-light: #3196A2;
+  --color-focus-light: #269332;
 
   /* Main theme variables */
   --color-primary: var(--color-primary-light);
@@ -25,12 +25,12 @@
 /* Dark theme tokens */
 .dark {
   /* Dark theme color tokens */
-  --color-primary-dark: #7d6946;
-  --color-secondary-dark: #5e7486;
-  --color-accent-dark: #414344;
-  --color-tertiary-dark: #5caac9;
-  --color-quaternary-dark: #9c80aa;
-  --color-focus-dark: #7d6946;
+  --color-primary-dark: #31bf41;
+  --color-secondary-dark: #ff3524;
+  --color-accent-dark: #3fd299;
+  --color-tertiary-dark: #59aa25;
+  --color-quaternary-dark: #3fc3d2;
+  --color-focus-dark: #31bf41;
 
   /* Update main theme variables */
   --color-primary: var(--color-primary-dark);
