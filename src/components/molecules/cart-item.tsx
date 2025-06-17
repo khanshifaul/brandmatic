@@ -17,6 +17,10 @@ export function CartItem({ item, onRemove, onQuantityChange, showQuantityControl
   const { businessData } = useBusiness();
   const currency = businessData?.currency?.[0] || "TK";
 
+  // Safely handle missing image data
+  const imageData = item?.image?.image;
+  const imageUrl = imageData ? imageData.optimizeUrl || imageData.secure_url || "/no-image.svg" : "/no-image.svg";
+
   const handleQuantityChange = (delta: number) => {
     if (!onQuantityChange) return;
     const newQuantity = item.quantity + delta;
@@ -27,16 +31,23 @@ export function CartItem({ item, onRemove, onQuantityChange, showQuantityControl
 
   return (
     <div className='flex gap-4 p-4'>
+      {" "}
       <div className='relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-md'>
-        <Image
-          src={item.image.image.optimizeUrl}
-          alt={item.name}
-          fill
-          className='object-cover'
-          sizes='(max-width: 768px) 96px, 96px'
-        />
+        {imageUrl && (
+          <Image
+            src={imageUrl as string}
+            alt={item?.name || "Product image"}
+            fill
+            className='object-cover'
+            sizes='(max-width: 768px) 96px, 96px'
+            onError={(e) => {
+              // Fallback to no-image if the image fails to load
+              const imgElement = e.currentTarget as HTMLImageElement;
+              imgElement.src = "/no-image.svg";
+            }}
+          />
+        )}
       </div>
-
       <div className='flex flex-1 flex-col'>
         <div className='flex justify-between text-base font-medium'>
           <h3 className='text-foreground'>{item.name}</h3>
