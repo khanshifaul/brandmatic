@@ -1,0 +1,104 @@
+name: Deploy to cPanel (shop.rufaidaenterprice.com)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_run:
+    workflows: ["Build, PR & Deploy"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    
+    env:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+      REMOTE_USER: 'rufaidae'  # Directly specified since we know the username
+      REMOTE_PORT: ${{ secrets.REMOTE_PORT || '22' }}
+      BUILD_DIR: 'build'
+      REMOTE_DIR: '/home/rufaidae/shop.rufaidaenterprice.com'
+      TARGET_URL: 'shop.rufaidaenterprice.com'  # For validation
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Install dependencies and build
+        run: |
+          npm ci --prefer-offline
+          npm run build
+        env:
+          NODE_ENV: 'production'
+
+      - name: Validate build output
+        run: |
+          if [ ! -d "$BUILD_DIR" ]; then
+            echo "❌ Build directory not found!"
+            exit 1
+          fi
+          echo "✔ Build directory exists"
+
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+
+      - name: Verify remote directory access
+        run: |
+          ssh -o StrictHostKeyChecking=no -p ${{ env.REMOTE_PORT }} ${{ env.REMOTE_USER }}@${{ env.REMOTE_HOST }} \
+            "ls -la ${{ env.REMOTE_DIR }}" || echo "⚠ Remote directory check failed (might be first deployment)"
+
+      - name: Deploy via SSH with backup
+        run: |
+          # Create timestamp for backup
+          TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+          
+          # Create backup of existing files
+          ssh -o StrictHostKeyChecking=no -p ${{ env.REMOTE_PORT }} ${{ env.REMOTE_USER }}@${{ env.REMOTE_HOST }} \
+            "mkdir -p ${{ env.REMOTE_DIR }}/.backups && \
+            tar -czf ${{ env.REMOTE_DIR }}/.backups/backup-$TIMESTAMP.tar.gz -C ${{ env.REMOTE_DIR }} ."
+          
+          # Sync new files with rsync
+          rsync -avz --progress -e "ssh -p ${{ env.REMOTE_PORT }} -o StrictHostKeyChecking=no" \
+            --delete \
+            --exclude='.htaccess' \
+            --exclude='.well-known/' \
+            --exclude='.backups/' \
+            ${{ env.BUILD_DIR}}/ ${{ env.REMOTE_USER }}@${{ env.REMOTE_HOST }}:${{ env.REMOTE_DIR }}/
+          
+          # Set permissions
+          ssh -o StrictHostKeyChecking=no -p ${{ env.REMOTE_PORT }} ${{ env.REMOTE_USER }}@${{ env.REMOTE_HOST }} \
+            "find ${{ env.REMOTE_DIR }} -type d -exec chmod 755 {} \; && \
+             find ${{ env.REMOTE_DIR }} -type f -exec chmod 644 {} \;"
+          
+          # Special permission for PHP files if needed
+          ssh -o StrictHostKeyChecking=no -p ${{ env.REMOTE_PORT }} ${{ env.REMOTE_USER }}@${{ env.REMOTE_HOST }} \
+            "find ${{ env.REMOTE_DIR }} -name '*.php' -exec chmod 600 {} \;"
+
+      - name: Verify deployment
+        run: |
+          # Check if index.html exists remotely
+          ssh -o StrictHostKeyChecking=no -p ${{ env.REMOTE_PORT }} ${{ env.REMOTE_USER }}@${{ env.REMOTE_HOST }} \
+            "test -f ${{ env.REMOTE_DIR }}/index.html" || exit 1
+          
+          echo "✔ Deployment verified"
+
+      - name: Clear Cloudflare cache (optional)
+        if: success()
+        uses: jonjohnsonjr/cloudflare-purge@v1
+        with:
+          zone: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          urls: |
+            https://${{ env.TARGET_URL }}/
+            https://${{ env.TARGET_URL }}/index.html
