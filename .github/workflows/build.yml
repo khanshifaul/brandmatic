@@ -1,18 +1,19 @@
-name: Build & Auto Pull Request
+name: Build & Deploy
 
 on:
   push:
     branches:
-      - '**'
-  pull_request:
-    branches: ['main']
+      - main
+      - development
+      - testing
+      - staging
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22.x]
+        node-version: [20.x]
 
     steps:
       - uses: actions/checkout@v4
@@ -22,77 +23,89 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      ### ---------- Frontend ----------
-      - name: Cache frontend node_modules
+      - name: Cache node_modules
         uses: actions/cache@v3
         with:
-          path: frontend/node_modules
-          key: frontend-${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('frontend/package-lock.json') }}
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
-            frontend-${{ runner.os }}-node-${{ matrix.node-version }}-
+            ${{ runner.os }}-node-${{ matrix.node-version }}-
 
-      - name: Install frontend dependencies
-        working-directory: ./
+      - name: Install dependencies
         run: npm ci
 
-      - name: Build frontend
-        working-directory: ./
+      - name: Build
         run: npm run build --if-present
 
-  handle-pr:
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: build
+
+  deploy:
     needs: build
     runs-on: ubuntu-latest
-    if: always()
-    permissions:
-      contents: write
-      pull-requests: write
+    if: github.ref == 'refs/heads/main' && needs.build.result == 'success'
+    env:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+      REMOTE_USER: 'rufaidae'
+      REMOTE_PORT: ${{ secrets.REMOTE_PORT || '22' }}
+      BUILD_DIR: 'build'
+      REMOTE_DIR: '/home/rufaidae/shop.rufaidaenterprice.com'
+      TARGET_URL: 'shop.rufaidaenterprice.com'
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Determine PR target dynamically
-        id: pr-target
-        run: |
-          BRANCH="${GITHUB_REF##*/}"
-          echo "Current branch: $BRANCH"
-
-          if [[ "$BRANCH" == "development" ]]; then
-            echo "pr_target=testing" >> "$GITHUB_OUTPUT"
-          elif [[ "$BRANCH" == "testing" ]]; then
-            if [ "${{ needs.build.result }}" == "success" ]; then
-              echo "pr_target=staging" >> "$GITHUB_OUTPUT"
-            else
-              echo "pr_target=error-to-development" >> "$GITHUB_OUTPUT"
-            fi
-          elif [[ "$BRANCH" == "staging" && "${{ needs.build.result }}" == "success" ]]; then
-            echo "pr_target=main" >> "$GITHUB_OUTPUT"
-          elif [[ "$BRANCH" != "main" && "$BRANCH" != "staging" && "$BRANCH" != "testing" && "$BRANCH" != "development" ]]; then
-            echo "pr_target=development" >> "$GITHUB_OUTPUT"
-          else
-            echo "pr_target=none" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Send error message to development (if testing fails)
-        if: steps.pr-target.outputs.pr_target == 'error-to-development'
-        run: echo "❌ Build failed on 'testing'. Notify the development team." # Replace with Slack/Discord webhook etc.
-
-      - name: Create Pull Request
-        if: |
-          steps.pr-target.outputs.pr_target != 'none' &&
-          steps.pr-target.outputs.pr_target != 'error-to-development'
-        uses: peter-evans/create-pull-request@v5
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
         with:
-          branch: 'auto-pr/${{ github.ref_name }}-to-${{ steps.pr-target.outputs.pr_target }}' # Creates a new branch for the PR
-          base: ${{ steps.pr-target.outputs.pr_target }} # Target branch (e.g., `main`, `development`)
-          title: 'Auto PR: ${{ github.ref_name }} → ${{ steps.pr-target.outputs.pr_target }}'
-          body: |
-            **Automated PR after successful build** ✅  
-            **Source Branch:** `${{ github.ref_name }}`  
-            **Target Branch:** `${{ steps.pr-target.outputs.pr_target }}`  
-            **Triggered by:** @${{ github.actor }}  
-            **Build Status:** Success (${{ needs.build.result }})
-          commit-message: 'chore: Auto-merge ${{ github.ref_name }} → ${{ steps.pr-target.outputs.pr_target }}'
-          labels: 'auto-pr, build-success'
-          assignees: 'musabexpressitbd, shifaul-expressitbd' # ${{ github.actor }} Correct parameter (was `assigners`)
-          reviewers: 'musabexpressitbd, shifaul-expressitbd' # Comma-separated list
-          draft: false # Set to `true` if you want draft PRs
+          name: build
+          path: build
+
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+
+      - name: Verify remote directory access
+        run: |
+          ssh -o StrictHostKeyChecking=no -p ${{ env.REMOTE_PORT }} ${{ env.REMOTE_USER }}@${{ env.REMOTE_HOST }} \
+            "ls -la ${{ env.REMOTE_DIR }}" || echo "⚠ Remote directory check failed (might be first deployment)"
+
+      - name: Deploy via SSH with backup
+        run: |
+          TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+          ssh -o StrictHostKeyChecking=no -p ${{ env.REMOTE_PORT }} ${{ env.REMOTE_USER }}@${{ env.REMOTE_HOST }} \
+            "mkdir -p ${{ env.REMOTE_DIR }}/.backups && \
+            tar -czf ${{ env.REMOTE_DIR }}/.backups/backup-$TIMESTAMP.tar.gz -C ${{ env.REMOTE_DIR }} ."
+          rsync -avz --progress -e "ssh -p ${{ env.REMOTE_PORT }} -o StrictHostKeyChecking=no" \
+            --delete \
+            --exclude='.htaccess' \
+            --exclude='.well-known/' \
+            --exclude='.backups/' \
+            ${{ env.BUILD_DIR }}/ ${{ env.REMOTE_USER }}@${{ env.REMOTE_HOST }}:${{ env.REMOTE_DIR }}/
+          ssh -o StrictHostKeyChecking=no -p ${{ env.REMOTE_PORT }} ${{ env.REMOTE_USER }}@${{ env.REMOTE_HOST }} \
+            "find ${{ env.REMOTE_DIR }} -type d -exec chmod 755 {} \; && \
+             find ${{ env.REMOTE_DIR }} -type f -exec chmod 644 {} \;"
+          ssh -o StrictHostKeyChecking=no -p ${{ env.REMOTE_PORT }} ${{ env.REMOTE_USER }}@${{ env.REMOTE_HOST }} \
+            "find ${{ env.REMOTE_DIR }} -name '*.php' -exec chmod 600 {} \;"
+
+      - name: Verify deployment
+        run: |
+          ssh -o StrictHostKeyChecking=no -p ${{ env.REMOTE_PORT }} ${{ env.REMOTE_USER }}@${{ env.REMOTE_HOST }} \
+            "test -f ${{ env.REMOTE_DIR }}/index.html" || exit 1
+          echo "✔ Deployment verified"
+
+      - name: Clear Cloudflare cache (optional)
+        if: success()
+        uses: jonjohnsonjr/cloudflare-purge@v1
+        with:
+          zone: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          urls: |
+            https://${{ env.TARGET_URL }}/
+            https://${{ env.TARGET_URL }}/index.html
